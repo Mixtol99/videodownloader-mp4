@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<meta name="description" content="Descargador de videos MP4 online">
+<meta name="description" content="VideoDownloader MP4 - Descargador online">
 <title>VideoDownloader MP4</title>
 
 <style>
@@ -19,8 +19,6 @@ body {
   background: #0b1120;
   color: white;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
 header {
@@ -38,8 +36,7 @@ header {
 main {
   width: 92%;
   max-width: 570px;
-  margin: auto;
-  padding: 35px 0;
+  margin: 55px auto;
 }
 
 .panel {
@@ -96,7 +93,6 @@ button {
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: .2s;
 }
 
 button:hover {
@@ -118,14 +114,14 @@ button:disabled {
 }
 
 .video-icon {
-  font-size: 40px;
+  font-size: 45px;
   text-align: center;
   margin-bottom: 12px;
 }
 
 .result h2 {
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
 }
 
 .format {
@@ -134,7 +130,7 @@ button:disabled {
   background: #172b3e;
   padding: 14px;
   border-radius: 9px;
-  margin-top: 15px;
+  margin-top: 12px;
 }
 
 .mp4 {
@@ -147,14 +143,41 @@ button:disabled {
   text-align: center;
   margin-top: 18px;
   font-size: 14px;
+  line-height: 1.6;
   overflow-wrap: anywhere;
+}
+
+.progress-container {
+  display: none;
+  margin-top: 20px;
+}
+
+.progress-bg {
+  height: 10px;
+  background: #29394e;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #36d995;
+  transition: width .2s;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 12px;
+  color: #a9b8cb;
+  margin-top: 8px;
 }
 
 .privacy {
   text-align: center;
   color: #8494aa;
   font-size: 12px;
-  line-height: 1.7;
+  line-height: 1.8;
   margin-top: 22px;
 }
 
@@ -174,120 +197,217 @@ footer {
 </header>
 
 <main>
-  <div class="panel">
+<div class="panel">
 
-    <h1>Descarga tus videos</h1>
+<h1>Descarga tus videos</h1>
 
-    <p class="description">
-      Pega el enlace directo de tu archivo de video
-      y descárgalo en formato MP4.
-    </p>
+<p class="description">
+Pega un enlace directo a tu video y descarga el archivo MP4.
+</p>
 
-    <label for="videoLink">Enlace del video</label>
+<label for="videoLink">Enlace del video</label>
 
-    <input
-      type="url"
-      id="videoLink"
-      placeholder="https://ejemplo.com/video.mp4"
-      autocomplete="off"
-      spellcheck="false"
-    >
+<input
+  type="url"
+  id="videoLink"
+  placeholder="https://ejemplo.com/video.mp4"
+  autocomplete="off"
+>
 
-    <button id="checkButton" onclick="checkVideo()">
-      Consultar video
-    </button>
+<button id="checkButton">
+Consultar video
+</button>
 
-    <div class="result" id="result">
+<div class="result" id="result">
 
-      <div class="video-icon">🎬</div>
+  <div class="video-icon">🎬</div>
 
-      <h2>Video listo</h2>
+  <h2>Video disponible</h2>
 
-      <div class="format">
-        <span>Formato</span>
-        <span class="mp4">MP4</span>
-      </div>
-
-      <div class="format">
-        <span>Calidad</span>
-        <span class="mp4">Original</span>
-      </div>
-
-      <button onclick="downloadVideo()">
-        ↓ Descargar video MP4
-      </button>
-
-    </div>
-
-    <div id="message"></div>
-
-    <div class="privacy">
-      🔒 No guardamos enlaces ni historial.<br>
-      No utilizamos cuentas ni bases de datos.<br>
-      Utiliza enlaces de videos propios o autorizados.
-    </div>
-
+  <div class="format">
+    <span>Formato</span>
+    <span class="mp4">MP4</span>
   </div>
+
+  <div class="format">
+    <span>Calidad</span>
+    <span class="mp4">Original</span>
+  </div>
+
+  <button id="downloadButton">
+    ↓ Descargar MP4
+  </button>
+
+</div>
+
+<div class="progress-container" id="progressContainer">
+  <div class="progress-bg">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div class="progress-text" id="progressText">
+    Preparando descarga...
+  </div>
+</div>
+
+<div id="message"></div>
+
+<div class="privacy">
+🔒 No guardamos enlaces ni historial.<br>
+No utilizamos cuentas ni bases de datos.<br>
+Descarga únicamente videos propios o autorizados.
+</div>
+
+</div>
 </main>
 
 <footer>
-  VideoDownloader MP4 · Descargas online
+VideoDownloader MP4 · Descargas online
 </footer>
 
 <script>
+const input = document.getElementById("videoLink");
+const result = document.getElementById("result");
+const message = document.getElementById("message");
+const checkButton = document.getElementById("checkButton");
+const downloadButton = document.getElementById("downloadButton");
+const progressContainer = document.getElementById("progressContainer");
+const progressBar = document.getElementById("progressBar");
+const progressText = document.getElementById("progressText");
+
 let videoURL = "";
 
-function checkVideo() {
-  const input = document.getElementById("videoLink");
-  const result = document.getElementById("result");
-  const message = document.getElementById("message");
+checkButton.addEventListener("click", checkVideo);
 
+input.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") checkVideo();
+});
+
+downloadButton.addEventListener("click", downloadVideo);
+
+function checkVideo() {
   result.style.display = "none";
+  progressContainer.style.display = "none";
+  message.textContent = "";
   videoURL = "";
 
-  const value = input.value.trim();
-
-  if (!value) {
-    message.textContent = "Pega primero el enlace del video.";
-    return;
-  }
-
   try {
-    const url = new URL(value);
+    const url = new URL(input.value.trim());
 
-    if (!["http:", "https:"].includes(url.protocol)) {
+    if (!["https:", "http:"].includes(url.protocol)) {
       throw new Error();
     }
 
     videoURL = url.href;
     result.style.display = "block";
+
     message.textContent =
-      "Enlace válido. Puedes intentar descargar el archivo.";
+      "Enlace válido. Pulsa descargar para obtener el archivo.";
 
   } catch {
-    message.textContent = "Introduce un enlace válido.";
+    message.textContent = "Introduce un enlace HTTP o HTTPS válido.";
   }
 }
 
-function downloadVideo() {
+async function downloadVideo() {
   if (!videoURL) return;
 
-  const link = document.createElement("a");
+  downloadButton.disabled = true;
+  checkButton.disabled = true;
 
-  link.href = videoURL;
-  link.download = "video.mp4";
-  link.target = "_blank";
-  link.rel = "noopener noreferrer";
+  progressContainer.style.display = "block";
+  progressBar.style.width = "0%";
+  progressText.textContent = "Conectando con el servidor...";
+  message.textContent = "";
 
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+  try {
+    const response = await fetch(videoURL);
 
-  document.getElementById("message").textContent =
-    "Si el servidor permite descargas, tu video comenzará a descargarse.";
+    if (!response.ok) {
+      throw new Error("El servidor no permitió descargar el archivo.");
+    }
+
+    const type = response.headers.get("content-type") || "";
+
+    if (
+      !type.toLowerCase().startsWith("video/") &&
+      !type.toLowerCase().includes("octet-stream")
+    ) {
+      throw new Error("El enlace no parece ser un archivo de video.");
+    }
+
+    const total = Number(response.headers.get("content-length")) || 0;
+
+    if (!response.body) {
+      throw new Error("El navegador no pudo leer el archivo.");
+    }
+
+    const reader = response.body.getReader();
+    const chunks = [];
+    let received = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      chunks.push(value);
+      received += value.length;
+
+      if (total > 0) {
+        const percent = Math.min(
+          99,
+          Math.round((received / total) * 100)
+        );
+
+        progressBar.style.width = percent + "%";
+
+        progressText.textContent =
+          "Descargando: " + percent + "%";
+      } else {
+        progressText.textContent =
+          "Descargados: " +
+          (received / 1024 / 1024).toFixed(2) + " MB";
+      }
+    }
+
+    const blob = new Blob(chunks, { type: "video/mp4" });
+
+    if (!blob.size) {
+      throw new Error("El archivo está vacío.");
+    }
+
+    const blobURL = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = blobURL;
+    link.download = "video.mp4";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    progressBar.style.width = "100%";
+    progressText.textContent = "100% - Descarga preparada";
+
+    message.textContent = "¡Tu descarga se ha iniciado!";
+
+    setTimeout(() => {
+      URL.revokeObjectURL(blobURL);
+    }, 60000);
+
+  } catch (error) {
+    progressContainer.style.display = "none";
+
+    message.textContent =
+      "No se pudo descargar: " + error.message +
+      " Comprueba si el servidor permite CORS y acceso al archivo.";
+
+  } finally {
+    downloadButton.disabled = false;
+    checkButton.disabled = false;
+  }
 }
 </script>
 
 </body>
 </html>
-
